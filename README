@@ -1,6 +1,5 @@
-trials_chatgpt
-    This folder contains several scripts that are different tests obtained querying ChatGPT.
-    Each script is named like "goXXX" where XXX is the version of the incremental fixes.
+docs
+    some pdf files about sports data analisys, and initial chatgpt interactions
 
 current
     This folder has the fully functional scripts, the final versions.

@@ -1,0 +1,38 @@
+what is the most used java library to parse html and javascript web sites?
+
+what is the best technology java, python or javascript to parse html and javascript web sites?
+
+can you write a python project to extract matches results from https://www.rfetm.es/ ?
+
+yes, can you inspect live HTML?
+
+parse results and teams from this URL: https://rfetm.es/resultados/2024-2025/view.php?liga=Mg==&grupo=1&subgrupo=S&jornada=0&sexo=M
+
+this script has an error with the "## CLASIFICACIÓN FINAL ~ * a"
+
+line 26 where "next((i for i,l in enumerate(lines) if 'CLASIFICACIÓN FINAL' in l." is throwing a index out of bounds error
+
+sometimes it gets confused taking the match time instead of the result
+
+can you obtain a list of teams from https://www.rfetm.es/ of super division ?
+
+can you build a python script?
+
+the script is not working, not returning the team names
+
+ok it worked thanks
+
+can you modify the script so it can show the team ID or eqdat url param?
+
+can you build a csv file response ?
+
+can you expand this script to all divisions and female?
+
+the script is not working only showing results for superdivision
+
+still not working only showing results for superdivision masculina
+
+can you write in the csv the team ID or eqdat?
+
+the team id is not shown
+

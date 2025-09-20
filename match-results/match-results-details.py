@@ -6,6 +6,7 @@ import csv
 from datetime import datetime
 import re
 from urllib.parse import urlparse, parse_qs
+from pathlib import Path
 
 from common import rfetmcommons
 from common import resourceadapter
@@ -307,7 +308,9 @@ def process_results_details_for_team(season_year, genre, category, team_id):
     matches_results_for_year_folder = rfetmcommons.RESOURCES_FOLDER + "/match-results-details/{0}"
     current_folder = matches_results_for_year_folder.format(season_year.value)
     if not os.path.exists(current_folder):
-        os.mkdir(current_folder)
+        folder_path = Path(current_folder)
+        folder_path.parent.mkdir(parents=True, exist_ok=True)
+
 
     all_url_params = rfetmcommons.get_results_url_params_for_genre_category_all_groups(genre, category)
     for url_params_item in all_url_params:
@@ -359,7 +362,7 @@ if __name__ == "__main__":
     #process_results_details_for_team(rfetmcommons.Season.T_2024_2025, rfetmcommons.Genre.FEMALE, rfetmcommons.Category.DIVISION_HONOR, 111)
     #process_results_for_season_all_teams(rfetmcommons.Season.T_2024_2025)
     #process_results_for_season_all_teams(rfetmcommons.Season.T_2023_2024)
-    #process_results_for_season_all_teams(rfetmcommons.Season.T_2022_2023)
+    process_results_for_season_all_teams(rfetmcommons.Season.T_2022_2023)
     #process_results_for_season_all_teams(rfetmcommons.Season.T_2021_2022)
     #process_results_for_season_all_teams(rfetmcommons.Season.T_2020_2021)
     #process_results_for_season_all_teams(rfetmcommons.Season.T_2019_2020)

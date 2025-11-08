@@ -147,7 +147,8 @@ def parse_double_player_2(a_element):
     return None
 
 def parse_jornada_body_from_td_cols(cols, jornada_number, jornada_header_info, matches_id_seen):
-    contender_letter = cols[0].get_text(strip=True)
+    contender_letter_1 = cols[0].get_text(strip=True)
+    contender_letter_2 = cols[2].get_text(strip=True)
     player1_text = cols[1].get_text(strip=True)
     player2_text = cols[3].get_text(strip=True)
 
@@ -169,7 +170,7 @@ def parse_jornada_body_from_td_cols(cols, jornada_number, jornada_header_info, m
         #info_player2 = parse_player_info(player2_text)
         pass
 
-    if contender_letter == "D":
+    if contender_letter_1 == "D":
         info = parse_doubles_team_info(cols[1])
         info_player12 = info["player-1"]
         info_player22 = info["player-2"]
@@ -219,9 +220,11 @@ def parse_jornada_body_from_td_cols(cols, jornada_number, jornada_header_info, m
         "Visitor team name": (jornada_header_info["visitor_team_name"] if jornada_header_info is not None else ""),
         "Player 1 Name": info_player1[0] if info_player1 else '',
         "Player 1 License": info_player1[1] if info_player1 else '',
+        "Player 1 Letter": contender_letter_1 if contender_letter_1 else '',
         #"Player 1 Rank": info_player1[2] if info_player1 else '',
         "Player 2 Name": info_player2[0] if info_player1 else '',
         "Player 2 License": info_player2[1] if info_player1 else '',
+        "Player 2 Letter": contender_letter_2 if contender_letter_1 else '',
         #"Player 2 Rank": info_player2[2] if info_player1 else '',
         "Player 1-2 Name": (info_player12["name"] if info_player12 is not None else None),
         "Player 1-2 License": (info_player12["id"] if info_player12 is not None else None),
@@ -362,8 +365,8 @@ if __name__ == "__main__":
     #process_results_details_for_team(rfetmcommons.Season.T_2024_2025, rfetmcommons.Genre.FEMALE, rfetmcommons.Category.DIVISION_HONOR, 111)
     #process_results_for_season_all_teams(rfetmcommons.Season.T_2024_2025)
     #process_results_for_season_all_teams(rfetmcommons.Season.T_2023_2024)
-    process_results_for_season_all_teams(rfetmcommons.Season.T_2022_2023)
-    #process_results_for_season_all_teams(rfetmcommons.Season.T_2021_2022)
+    #process_results_for_season_all_teams(rfetmcommons.Season.T_2022_2023)
+    process_results_for_season_all_teams(rfetmcommons.Season.T_2021_2022)
     #process_results_for_season_all_teams(rfetmcommons.Season.T_2020_2021)
     #process_results_for_season_all_teams(rfetmcommons.Season.T_2019_2020)
     #process_results_for_season_all_teams(rfetmcommons.Season.T_2018_2019)

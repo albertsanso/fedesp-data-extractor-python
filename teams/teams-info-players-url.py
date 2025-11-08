@@ -180,9 +180,9 @@ def process_teams_info_for_season(season):
 if __name__ == "__main__":
     pass
     process_teams_info_for_season(Season.T_2024_2025)
-    #process_teams_info_for_season(Season.T_2023_2024)
-    #process_teams_info_for_season(Season.T_2022_2023)
-    #process_teams_info_for_season(Season.T_2021_2022)
-    #process_teams_info_for_season(Season.T_2020_2021)
-    #process_teams_info_for_season(Season.T_2019_2020)
-    #process_teams_info_for_season(Season.T_2018_2019)
+    process_teams_info_for_season(Season.T_2023_2024)
+    process_teams_info_for_season(Season.T_2022_2023)
+    process_teams_info_for_season(Season.T_2021_2022)
+    process_teams_info_for_season(Season.T_2020_2021)
+    process_teams_info_for_season(Season.T_2019_2020)
+    process_teams_info_for_season(Season.T_2018_2019)

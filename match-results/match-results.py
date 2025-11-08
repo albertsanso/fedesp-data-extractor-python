@@ -178,10 +178,10 @@ def fetch_results_for_season(season_year):
     process_matches_for(Genre.FEMALE, Category.SEGUNDA_NACIONAL, season_year)
 
 if __name__ == "__main__":
-    #fetch_results_for_season(Season.T_2024_2025.value)
+    fetch_results_for_season(Season.T_2024_2025.value)
     #fetch_results_for_season(Season.T_2023_2024.value)
     #fetch_results_for_season(Season.T_2022_2023.value)
     #fetch_results_for_season(Season.T_2021_2022.value)
     #fetch_results_for_season(Season.T_2020_2021.value)
     #fetch_results_for_season(Season.T_2019_2020.value)
-    fetch_results_for_season(Season.T_2018_2019.value)
+    #fetch_results_for_season(Season.T_2018_2019.value)

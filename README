@@ -3,3 +3,10 @@ docs
 
 current
     This folder has the fully functional scripts, the final versions.
+
+Execution order
+1. TEAMS
+    1.1. teams-info-players-url.py
+    1.2. teams-players.py
+2. MATCHES
+    2.1. match-results-details.py

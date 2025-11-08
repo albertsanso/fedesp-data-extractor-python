@@ -94,11 +94,11 @@ def log_info(text, args=""):
     print(text, args)
 
 if __name__ == "__main__":
-    #process_team_data_for_season(rfetmcommons.Season.T_2024_2025)
-    #process_team_data_for_season(rfetmcommons.Season.T_2023_2024)
-    #process_team_data_for_season(rfetmcommons.Season.T_2022_2023)
-    #process_team_data_for_season(rfetmcommons.Season.T_2021_2022)
-    #process_team_data_for_season(rfetmcommons.Season.T_2020_2021)
-    #process_team_data_for_season(rfetmcommons.Season.T_2019_2020)
+    process_team_data_for_season(rfetmcommons.Season.T_2024_2025)
+    process_team_data_for_season(rfetmcommons.Season.T_2023_2024)
+    process_team_data_for_season(rfetmcommons.Season.T_2022_2023)
+    process_team_data_for_season(rfetmcommons.Season.T_2021_2022)
+    process_team_data_for_season(rfetmcommons.Season.T_2020_2021)
+    process_team_data_for_season(rfetmcommons.Season.T_2019_2020)
     process_team_data_for_season(rfetmcommons.Season.T_2018_2019)
     pass

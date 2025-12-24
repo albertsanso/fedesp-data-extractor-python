@@ -88,13 +88,33 @@ def fetch_results(url):
             cols = row.find_all('td')
 
             parsed_info_as_header = parse_for_header_jornada_info(cols)
+            """
+response["local_team_id"] = teams_info["local"]["id"]
+response["local_team_name"] = teams_info["local"]["name"]
+response["visitor_team_id"] = teams_info["visitor"]["id"]
+response["visitor_team_name"] = teams_info["visitor"]["name"]
+            """
             if parsed_info_as_header is not None:
                 current_parse_section = "header-section"
                 jornada_header_info = parsed_info_as_header
                 continue
 
             parsed_body_titles_cols = parse_for_body_titles_cols(cols)
+            """
+{"local_team": cols[2].get_text(), "visitor_team": cols[4].get_text()}
+            """
             if parsed_body_titles_cols is not None:
+                jornada_header_info["abc_team_name"] = parsed_body_titles_cols["abc_team"]
+                jornada_header_info["xyz_team_name"] = parsed_body_titles_cols["xyz_team"]
+
+                if jornada_header_info["local_team_name"] == jornada_header_info["abc_team_name"]:
+                    jornada_header_info["abc_team_id"] = jornada_header_info["local_team_id"]
+                else:
+                    jornada_header_info["xyz_team_id"] = jornada_header_info["local_team_id"]
+
+                jornada_header_info["local_team_name"] = jornada_header_info["abc_team_name"]
+                jornada_header_info["visitor_team_name"] = jornada_header_info["xyz_team_name"]
+
                 current_parse_section = "body-section"
                 continue
 
@@ -110,7 +130,7 @@ def fetch_results(url):
 
 def parse_for_body_titles_cols(cols):
     if len(cols) > 10 and cols[5].get_text() == 'J1' and cols[6].get_text() == 'J2' and cols[7].get_text() == 'J3':
-        return {"local_team": cols[2].get_text(), "visitor_team": cols[4].get_text()}
+        return {"local_team": cols[2].get_text(), "visitor_team": cols[4].get_text(), "abc_team": cols[2].get_text(), "xyz_team": cols[4].get_text()}
     return None
 
 def parse_doubles_team_info(col):
@@ -365,9 +385,9 @@ if __name__ == "__main__":
     #process_results_details_for_team(rfetmcommons.Season.T_2024_2025, rfetmcommons.Genre.FEMALE, rfetmcommons.Category.DIVISION_HONOR, 111)
     #process_results_for_season_all_teams(rfetmcommons.Season.T_2024_2025)
     #process_results_for_season_all_teams(rfetmcommons.Season.T_2023_2024)
-    #process_results_for_season_all_teams(rfetmcommons.Season.T_2022_2023)
+    process_results_for_season_all_teams(rfetmcommons.Season.T_2022_2023)
     process_results_for_season_all_teams(rfetmcommons.Season.T_2021_2022)
-    #process_results_for_season_all_teams(rfetmcommons.Season.T_2020_2021)
-    #process_results_for_season_all_teams(rfetmcommons.Season.T_2019_2020)
-    #process_results_for_season_all_teams(rfetmcommons.Season.T_2018_2019)
+    process_results_for_season_all_teams(rfetmcommons.Season.T_2020_2021)
+    process_results_for_season_all_teams(rfetmcommons.Season.T_2019_2020)
+    process_results_for_season_all_teams(rfetmcommons.Season.T_2018_2019)
 

@@ -51,6 +51,7 @@ class Season(Enum):
     T_2024_2025 = "2024-2025"
     T_2023_2024 = "2023-2024"
     T_2022_2023 = "2022-2023"
+    T_2021_2022 = "2021-2022"
     T_2020_2021 = "2020-2021"
     T_2019_2020 = "2019-2020"
     T_2018_2019 = "2018-2019"
@@ -100,6 +101,20 @@ URL_PARAMS = {
         Genre.FEMALE: {
             Category.SUPER_DIVISION:   [_p(F,"MQ==",0,"S")],
             Category.DIVISION_HONOR:   [_p(F,"Mg==",g,"S") for g in range(1,4)],
+            Category.PRIMERA_NACIONAL: [_p(F,"Mw==",g,"S") for g in range(1,7)],
+            Category.SEGUNDA_NACIONAL: [],
+        },
+    },
+    Season.T_2021_2022: {
+        Genre.MALE: {
+            Category.SUPER_DIVISION:   [_p(M,"MQ==",g,"S") for g in range(1,3)],
+            Category.DIVISION_HONOR:   [_p(M,"Mg==",g,s) for s in ("A","B") for g in range(1,4)],
+            Category.PRIMERA_NACIONAL: [_p(M,"Mw==",g,s) for s in ("A","B") for g in range(1,7)],
+            Category.SEGUNDA_NACIONAL: [_p(M,"NA==",g,s) for s in ("A","B") for g in range(1,14)],
+        },
+        Genre.FEMALE: {
+            Category.SUPER_DIVISION:   [_p(F,"MQ==",g,"S") for g in range(1,3)],
+            Category.DIVISION_HONOR:   [_p(F,"Mg==",g,s) for s in ("A","B") for g in range(1,4)],
             Category.PRIMERA_NACIONAL: [_p(F,"Mw==",g,"S") for g in range(1,7)],
             Category.SEGUNDA_NACIONAL: [],
         },
@@ -534,7 +549,7 @@ def main(
                         log.warning("  No data – skipping."); continue
                     csv_path = os.path.join(
                         output, s.value,
-                        f"rfetm-{s.value}-{g.value}-{c.value}-group-{params['group_id']}_matches.csv"
+                        f"rfetm-{s.value}-{g.value}-{c.value}-group-{params['group_id']}-teamid-0_matches.csv"
                     )
                     write_csv(rows, csv_path)
 
@@ -559,4 +574,4 @@ if __name__ == "__main__":
     #main(season="2023-2024", genre="male")
     #main(season="2020-2021", genre="male")
     #main(season="2019-2020", genre="male")
-    main(season="2018-2019")
+    main(season="2021-2022")

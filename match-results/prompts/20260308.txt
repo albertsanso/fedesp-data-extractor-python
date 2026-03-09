@@ -1,0 +1,28 @@
+build python script to parse this page: https://rfetm.es/resultados/2024-2025/view.php?liga=Mg==&grupo=1&subgrupo=S&jornada=0&equipo=1113&sexo=F and produce a csv file
+
+Q: What data should be included in the CSV? (Select all that apply)
+A: All of the above
+
+Q: One row per...
+A: Individual game within a match
+
+home player and away player is worng. Home and Away is based on Home Team and Away team order in the header showing the date and hour, team names and global score: first Team name is Home team and Second team name is Away team
+
+
+
+
+now using this config i want a scrapper that goes throught the generated URLs and generates CSV files like this:
+
+jornada,match_date,home_team_id,home_team,away_team_id,away_team,match_score_home,match_score_away,venue,referee,home_position,away_position,game_type,home_player_lic,home_player_name,home_player2_lic,home_player2_name,away_player_lic,away_player_name,away_player2_lic,away_player2_name,set1,set2,set3,set4,set5,game_result_home,game_result_away,running_score_home,running_score_away
+Jornada 1,28/09/202417:00,111,AVILÉS TENIS DE MESA,581,ETM TORRELAVEGA HOTEL MARQUES.S,4,3,,,A,Y,singles,28785,"RIESTRA POCIÑO, MARIA",,,20890,"SANCHEZ SOUSA, LUCIA",,,9-11,11-6,11-5,11-3,,3,1,1,0
+Jornada 1,28/09/202417:00,111,AVILÉS TENIS DE MESA,581,ETM TORRELAVEGA HOTEL MARQUES.S,4,3,,,B,X,singles,23480,"CALLE BALADO, MARIA DEL CARMEN",,,40954,"DE ARMAS PEREZ, THALIA",,,5-11,6-11,3-11,,,0,3,1,1
+Jornada 1,28/09/202417:00,111,AVILÉS TENIS DE MESA,581,ETM TORRELAVEGA HOTEL MARQUES.S,4,3,,,C,Z,singles,44485,"LO , TSZ KWAN",,,32468,"BARREDA SALAS, ELOISA",,,11-13,11-1,11-5,11-4,,3,1,2,1
+Jornada 1,28/09/202417:00,111,AVILÉS TENIS DE MESA,581,ETM TORRELAVEGA HOTEL MARQUES.S,4,3,,,A,X,singles,28785,"RIESTRA POCIÑO, MARIA",,,40954,"DE ARMAS PEREZ, THALIA",,,4-11,6-11,7-11,,,0,3,2,2
+Jornada 1,28/09/202417:00,111,AVILÉS TENIS DE MESA,581,ETM TORRELAVEGA HOTEL MARQUES.S,4,3,,,C,Y,singles,44485,"LO , TSZ KWAN",,,20890,"SANCHEZ SOUSA, LUCIA",,,11-9,11-5,11-6,,,3,0,3,2
+Jornada 1,28/09/202417:00,111,AVILÉS TENIS DE MESA,581,ETM TORRELAVEGA HOTEL MARQUES.S,4,3,,,B,Z,singles,23480,"CALLE BALADO, MARIA DEL CARMEN",,,32468,"BARREDA SALAS, ELOISA",,,2-11,9-11,2-11,,,0,3,3,3
+Jornada 1,28/09/202417:00,111,AVILÉS TENIS DE MESA,581,ETM TORRELAVEGA HOTEL MARQUES.S,4,3,,,D,D,doubles,28785,"RIESTRA POCIÑO, MARIA",,"LO , TSZ KWAN",20890,"SANCHEZ SOUSA, LUCIA",,"DE ARMAS PEREZ, THALIA",4-11,11-9,9-11,12-10,13-11,3,2,4,3
+
+Take into account that: Home and Away is based on Home Team and Away team order in the header showing the date and hour, team names and global score: first Team name is Home team and Second team name is Away team.
+
+About Gae positions There are 2 game positions for both home and away players. There are 2 groups of game positions (A,B,C) and (X,Y,Z)
+

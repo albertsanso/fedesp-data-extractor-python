@@ -1,8 +1,9 @@
 import csv
+from dataclasses import asdict, fields
 from pathlib import Path
 from common import rfetmcommons
 
-def save_to_csv(data, filename):
+def save_to_csv(data, keys, filename):
     if not data:
         print("No data to save.")
         return
@@ -11,7 +12,6 @@ def save_to_csv(data, filename):
     file_path = Path(filename)
     file_path.parent.mkdir(parents=True, exist_ok=True)
 
-    keys = data[0].keys()
     with open(filename, mode="w", newline="", encoding="utf-8") as f:
         writer = csv.DictWriter(f, fieldnames=keys)
         writer.writeheader()

@@ -1,14 +1,13 @@
 # RFETM Scraper — Prompts & Skills
 
-This file contains reusable prompts you can paste directly to an AI assistant
-to automate common maintenance tasks on `rfetm_scraper.py`.
+Reusable prompts and skill definitions for maintaining `rfetm_scraper.py`,
+primarily for keeping `URL_PARAMS` and the `Season` enum in sync with the live site.
 
 ---
 
 ## Prompt 1 — Season Discovery
 
-Use this prompt when you want to find out what seasons are currently available
-on the RFETM site and what groups each category has, before updating the code.
+Use this to find all seasons currently available on the RFETM site and their group structure.
 
 ```
 You are helping maintain a Python scraper for https://rfetm.es/public/resultados
@@ -17,7 +16,7 @@ You are helping maintain a Python scraper for https://rfetm.es/public/resultados
 Fetch the RFETM results overview page and discover all available seasons and
 their group structure so I can update URL_PARAMS in rfetm_scraper.py.
 
-### Steps to follow
+### Steps
 
 1. Fetch https://rfetm.es/public/resultados
    Extract all season strings matching pattern YYYY-YYYY from href attributes.
@@ -26,7 +25,7 @@ their group structure so I can update URL_PARAMS in rfetm_scraper.py.
 2. For each season found, and for each combination of:
    - sex: M and F
    - league_id: MQ== (SuperDiv), Mg== (DivHonor), Mw== (Primera), NA== (Segunda)
-   - subgroup_id: use "S" if season year >= 2021, omit the parameter if older
+   - subgroup_id: use "S" if season year >= 2021, omit the parameter entirely if older
 
    Probe grupo values starting from 0, then 1, 2, 3... up to 20.
    For each grupo, fetch:
@@ -34,7 +33,7 @@ their group structure so I can update URL_PARAMS in rfetm_scraper.py.
    A grupo is VALID if the page contains at least one <a> tag with "equipo=" in the href.
    Stop probing when two consecutive grupos return no equipo= links.
 
-3. Produce a summary table like:
+3. Produce a summary table:
 
    Season     | Sex | Category          | Valid grupos
    -----------|-----|-------------------|-------------
@@ -50,22 +49,17 @@ their group structure so I can update URL_PARAMS in rfetm_scraper.py.
 
 ---
 
-## Prompt 2 — Add a Single New Season to URL_PARAMS
+## Prompt 2 — Add a Single New Season
 
-Use this after running Prompt 1 to get the discovery data, then paste both
-the discovery output and this prompt together.
+Use after Prompt 1. Paste the discovery output alongside this prompt.
 
 ```
 You are updating rfetm_scraper.py to add a new season to URL_PARAMS.
 
-### Context
-Here is the current Season enum and URL_PARAMS structure from rfetm_scraper.py:
-
+### Current Season enum and URL_PARAMS
 [PASTE THE Season ENUM AND URL_PARAMS DICT HERE]
 
-### Discovery data
-Here is the group structure discovered for the new season:
-
+### Discovery data for the new season
 [PASTE OUTPUT FROM PROMPT 1 HERE]
 
 ### Rules
@@ -77,55 +71,47 @@ Here is the group structure discovered for the new season:
     Primera Nacional   → "Mw=="
     Segunda Nacional   → "NA=="
 - Empty list [] means the category does not exist for that season/genre.
-- grupo=0 with a single entry means it is a single-group category (SuperDiv).
+- grupo=0 with a single entry = single-group category (SuperDiv pattern).
 - Multi-group categories use range(1, N+1) where N is the highest valid grupo.
 
 ### Task
-1. Add the new Season enum member following the existing naming pattern
-   T_YYYY_YYYY = "YYYY-YYYY".
-2. Add the complete URL_PARAMS entry for the new season, following the exact
-   structure of the existing entries.
-3. Output only the new Season enum member line and the new URL_PARAMS block.
-   Do not output the full file.
+1. Add the new Season enum member following the naming pattern T_YYYY_YYYY = "YYYY-YYYY".
+2. Add the complete URL_PARAMS entry for the new season, matching the existing structure.
+3. Output only the new Season enum line and the new URL_PARAMS block — not the full file.
 ```
 
 ---
 
 ## Prompt 3 — Full URL_PARAMS Sync
 
-Use this to regenerate the entire URL_PARAMS from scratch based on a fresh
-discovery run. More thorough than Prompt 2.
+Use for a complete rebuild from scratch after a full discovery run.
 
 ```
-You are rebuilding the URL_PARAMS configuration in rfetm_scraper.py from scratch
-based on a fresh discovery of the live RFETM site.
+You are rebuilding URL_PARAMS in rfetm_scraper.py from scratch based on a
+fresh discovery of the live RFETM site.
 
-### Current scraper skeleton (do not change anything except URL_PARAMS and Season enum)
+### Current scraper (do not change anything except URL_PARAMS and Season enum)
 [PASTE FULL rfetm_scraper.py HERE]
 
 ### Fresh discovery data (all seasons, all categories, all groups)
 [PASTE OUTPUT FROM PROMPT 1 HERE]
 
 ### Rules
-- Preserve all existing seasons that are still valid.
+- Preserve all existing seasons that are still valid on the site.
 - Add any new seasons found.
-- Remove seasons that no longer exist on the site (comment them out, do not delete).
+- Comment out (do not delete) seasons that no longer exist on the site.
 - Use _p(sex, league_id, group_id, subgroup_id) for all entries.
-- subgroup_id = "S" for seasons 2021-2022 and later, None for older seasons.
-- league_id mapping:
-    MQ== → SuperDivisión
-    Mg== → División de Honor
-    Mw== → Primera Nacional
-    NA== → Segunda Nacional
+- subgroup_id = "S" for seasons 2021-2022 and later, None for older.
+- league_id: MQ== SuperDiv, Mg== DivHonor, Mw== Primera, NA== Segunda.
 - Empty list [] for category/genre combinations with no valid groups.
 - Output the complete updated Season enum and URL_PARAMS dict only.
 ```
 
 ---
 
-## Prompt 4 — Verify a Specific Season/Group
+## Prompt 4 — Spot-check a Single URL
 
-Use this for a quick spot-check of one specific URL to confirm it returns data.
+Use to verify one specific URL returns valid data before adding it to config.
 
 ```
 Verify that this RFETM URL returns valid match data:
@@ -138,7 +124,7 @@ Fetch the URL and check:
 3. Does it contain a nested <table> inside a match table (the detail table)?
 
 Report: VALID (with match count) or INVALID (with reason).
-If invalid, suggest the corrected URL based on the URL parameter rules:
+If invalid, suggest a corrected URL based on these rules:
 - subgrupo=S for seasons >= 2021, omit for older
 - grupo=0 for SuperDivisión, grupo=1..N for other categories
 - sexo=M or sexo=F
@@ -146,48 +132,50 @@ If invalid, suggest the corrected URL based on the URL parameter rules:
 
 ---
 
-## Skill: URL_PARAMS Season Update
+## Skill: rfetm-url-params-update
 
-This is a structured skill definition you can load into an AI system prompt
-or skill file to give the assistant persistent context for update tasks.
+Structured skill definition for loading into an AI system prompt or skill file.
+Gives the assistant persistent context for all URL_PARAMS update tasks.
 
 ```
 SKILL: rfetm-url-params-update
-VERSION: 1.0
+VERSION: 1.1
 
 PURPOSE:
-  Update the URL_PARAMS configuration and Season enum in rfetm_scraper.py
-  to reflect the current state of https://rfetm.es/public/resultados
+  Update URL_PARAMS and the Season enum in rfetm_scraper.py to reflect
+  the current state of https://rfetm.es/public/resultados
 
-CONTEXT:
-  rfetm_scraper.py scrapes Spanish Table Tennis Federation match results.
-  URL_PARAMS is a nested dict: Season → Genre → Category → list[ParamDict].
-  Each ParamDict has: league_id, group_id, subgroup_id, sex.
+SCRIPT LOCATION: rfetm_scraper.py
+OUTPUT ROOT: ../resources/match-results-details/v3-claude
+
+FILE NAMING CONVENTION:
+  {output_root}/{season}/rfetm-{season}-{genre}-{category}-group-{group_id}_matches.csv
+  Example: ../resources/match-results-details/v3-claude/2024-2025/rfetm-2024-2025-male-super-divisio-group-0_matches.csv
+
+URL STRUCTURE:
+  https://rfetm.es/public/resultados/{season}/view.php
+    ?liga={league_id}&grupo={group_id}[&subgrupo={subgroup_id}]&jornada={n}&sexo={sex}
 
 KEY FACTS:
-  - Base URL: https://rfetm.es/public/resultados/{season}/view.php
-  - Parameters: liga, grupo, [subgrupo], jornada, sexo
-  - subgrupo="S" for seasons 2021-2022 and later; omit entirely for older
-  - liga values: MQ== SuperDiv, Mg== DivHonor, Mw== Primera, NA== Segunda
-  - A grupo is valid if the jornada=0 page contains equipo= links
+  - subgrupo="S" for seasons >= 2021-2022; omit entirely for older seasons
+  - liga: MQ== SuperDiv, Mg== DivHonor, Mw== Primera, NA== Segunda
+  - A grupo is valid if jornada=0 page contains equipo= links
   - Season enum naming: T_YYYY_YYYY = "YYYY-YYYY"
   - _p(sex, league_id, group_id, subgroup_id) builds a param dict
+  - main() is a pure programmatic function; CLI lives in __main__ block only
 
 DISCOVERY PROCEDURE:
-  1. Fetch https://rfetm.es/public/resultados
-  2. Extract YYYY-YYYY patterns from hrefs
-  3. For each season × sex × league × grupo (0..20):
-     - Fetch jornada=0 page
-     - Valid if contains "equipo=" in any href
-     - Stop probing after 2 consecutive invalid grupos
-  4. Build new Season enum + URL_PARAMS
+  1. Fetch https://rfetm.es/public/resultados, extract YYYY-YYYY from hrefs
+  2. For each season × sex × league × grupo (0..20):
+     - Fetch jornada=0 page; valid if contains "equipo=" in any href
+     - Stop after 2 consecutive invalid grupos
+  3. Build new Season enum member + URL_PARAMS entry
 
-OUTPUT FORMAT:
-  When asked to update URL_PARAMS, output:
+OUTPUT FORMAT (when updating):
   (a) New/changed Season enum lines
   (b) New/changed URL_PARAMS blocks
-  (c) Summary of changes (added seasons, removed seasons, changed group counts)
-  Never output the full file unless explicitly asked.
+  (c) Summary: added seasons, removed seasons, changed group counts
+  Do not output the full file unless explicitly asked.
 
 VALIDATION:
   After proposing changes, verify at least one URL per new season by fetching

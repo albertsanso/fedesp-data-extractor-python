@@ -467,7 +467,34 @@ def write_csv(rows, path):
 # CLI
 # ─────────────────────────────────────────────────────────────────────────────
 
-def main(season="2024-2025", genre=None, category=None, group=None, jornada=None, output="../resources/match-results-details/v3-claude", delay=0.5):
+def main(
+    season: str = "2024-2025",
+    genre: str = None,
+    category: str = None,
+    group: str = None,
+    jornada: int = None,
+    output: str = "../resources/match-results-details/v3-claude-flat",
+    delay: float = 1.0,
+):
+    """
+    Run the scraper programmatically.
+
+    Args:
+        season:   Season string e.g. "2024-2025". Default: "2024-2025".
+        genre:    "male" or "female". Default: both.
+        category: "super-divisio" | "divisio-honor" | "primera-nacional" | "segona-nacional".
+                  Default: all.
+        group:    Group ID string e.g. "0" or "1". Default: all.
+        jornada:  Scrape only this round number. Default: all.
+        output:   Output directory. Default: "output".
+        delay:    Seconds between HTTP requests. Default: 1.0.
+
+    Examples:
+        main()
+        main(season="2024-2025", genre="female")
+        main(season="2024-2025", genre="male", category="super-divisio", group="0", jornada=3)
+        main(season="2023-2024", output="data", delay=2.0)
+    """
     global REQUEST_DELAY
     REQUEST_DELAY = delay
 
@@ -498,17 +525,38 @@ def main(season="2024-2025", genre=None, category=None, group=None, jornada=None
                 for params in param_list:
                     if group is not None and params["group_id"] != group:
                         continue
-                    log.info(f"=== {s.value} / {g.value} / {c.value} / grupo {params['group_id']} ===")
+                    log.info(
+                        f"=== {s.value} / {g.value} / "
+                        f"{c.value} / grupo {params['group_id']} ==="
+                    )
                     rows = scrape_group(s, params, only_jornada=jornada)
                     if not rows:
                         log.warning("  No data – skipping."); continue
-                    csv_path = os.path.join(output, s.value, g.value, c.value, f"grupo_{params['group_id']}.csv")
+                    csv_path = os.path.join(
+                        output, s.value,
+                        f"rfetm-{s.value}-{g.value}-{c.value}-group-{params['group_id']}_matches.csv"
+                    )
                     write_csv(rows, csv_path)
 
     log.info("Done.")
 
 
 if __name__ == "__main__":
+    """
+    ap = argparse.ArgumentParser(description="RFETM league scraper")
+    ap.add_argument("--season",   default="2024-2025", help="e.g. 2022-2023")
+    ap.add_argument("--genre",    help="male or female")
+    ap.add_argument("--category", help="super-divisio | divisio-honor | primera-nacional | segona-nacional")
+    ap.add_argument("--group",    help="group_id, e.g. 0 or 1")
+    ap.add_argument("--jornada",  type=int, help="scrape only this jornada")
+    ap.add_argument("--output",   default="../resources/match-results-details/v3-claude")
+    ap.add_argument("--delay",    type=float, default=1.0)
+    args = ap.parse_args()
+    main(season=args.season, genre=args.genre, category=args.category, group=args.group, jornada=args.jornada, output=args.output, delay=args.delay,)
+    """
     #main(season="2024-2025", genre="female")
     #main(season="2023-2024", genre="female")
-    main(season="2023-2024", genre="male")
+    #main(season="2023-2024", genre="male")
+    #main(season="2020-2021", genre="male")
+    #main(season="2019-2020", genre="male")
+    main(season="2018-2019")

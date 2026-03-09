@@ -46,20 +46,31 @@ Scrape national table tennis league match results from the Spanish Table Tennis 
 | `away_player2_lic` | string | |
 | `away_player2_name` | string | |
 | `set1`–`set5` | string | Set score `"H-A"`, empty if not played |
-| `game_result_home` | int/string | Sets won by home player |
-| `game_result_away` | int/string | Sets won by away player |
+| `game_result_home` | int/string | Sets won by home player in this game |
+| `game_result_away` | int/string | Sets won by away player in this game |
 | `running_score_home` | int/string | Cumulative match score after this game |
 | `running_score_away` | int/string | Cumulative match score after this game |
 
 ### 3.2 Output directory structure
 
 ```
-output/
-  {season}/          e.g. 2024-2025
-    {genre}/         male | female
-      {category}/    super-divisio | divisio-honor | primera-nacional | segona-nacional
-        grupo_{n}.csv
+{output_root}/
+  {season}/
+    rfetm-{season}-{genre}-{category}-group-{group_id}_matches.csv
 ```
+
+Output root defaults to `../resources/match-results-details/v3-claude`.
+
+Example files under `2024-2025/`:
+```
+rfetm-2024-2025-male-super-divisio-group-0_matches.csv
+rfetm-2024-2025-male-divisio-honor-group-1_matches.csv
+rfetm-2024-2025-male-divisio-honor-group-2_matches.csv
+rfetm-2024-2025-female-super-divisio-group-0_matches.csv
+rfetm-2024-2025-female-primera-nacional-group-3_matches.csv
+```
+
+One flat folder per season. No sub-folders for genre or category — all files for a season share the same depth level.
 
 ---
 
@@ -71,8 +82,8 @@ output/
 https://rfetm.es/public/resultados/{season}/view.php
   ?liga={league_id}
   &grupo={group_id}
-  [&subgrupo={subgroup_id}]   # omitted for seasons 2018-2019, 2019-2020, 2020-2021
-  &jornada={n}                # 0 = overview/all, N = specific round
+  [&subgrupo={subgroup_id}]   # omitted entirely for seasons 2018-2019, 2019-2020, 2020-2021
+  &jornada={n}                # 0 = overview/all jornadas, N = specific round
   &sexo={sex}                 # M | F
 ```
 
@@ -88,11 +99,11 @@ https://rfetm.es/public/resultados/{season}/view.php
 ### 4.3 Subgroup
 
 - Seasons ≥ 2021-2022: `subgrupo=S`
-- Seasons 2018-2019, 2019-2020, 2020-2021: `subgrupo` parameter omitted entirely
+- Seasons 2018-2019, 2019-2020, 2020-2021: `subgrupo` parameter **omitted entirely** (not set to empty — the server returns no data if the parameter is present but empty)
 
 ### 4.4 Season discovery
 
-Seasons available on the site can be scraped from the overview page at `https://rfetm.es/public/resultados`. Season links appear as `<a href=".../{YYYY-YYYY}/...">`. The `Season` enum and `URL_PARAMS` dict must be kept in sync with the live site.
+Seasons are scraped from `https://rfetm.es/public/resultados`. Season links appear as `<a href=".../{YYYY-YYYY}/...">`. The `Season` enum and `URL_PARAMS` dict must be kept in sync with the live site (see `prompts.md`).
 
 ---
 
@@ -101,13 +112,13 @@ Seasons available on the site can be scraped from the overview page at `https://
 ### 5.1 Page structure
 
 Each jornada page contains:
-1. **Jornada label tables** — small tables (≤2 TDs) whose text matches `"Jornada N"`. Used as section delimiters.
-2. **Match summary tables** — contain a DD/MM/YYYY date and ≥2 anchor tags. Processed only after a jornada label has been seen.
+1. **Jornada label tables** — small tables (≤2 TDs) whose text matches `"Jornada N"`. Used as section delimiters; match tables are only processed after one has been seen.
+2. **Match summary tables** — contain a DD/MM/YYYY date and ≥2 anchor tags.
 3. **Detail tables** — either nested inside the match summary table as `<table>`, or the immediately following `<table>` in page order.
 
 ### 5.2 Home/away determination
 
-The detail table header row contains left-team (td[1]) and right-team (td[3]) names. `left_is_home = (left_team_header == home_team)` (exact string match after whitespace normalisation).
+The detail table header row (TR[0]) contains the left-team name at td[1] and right-team name at td[3]. `left_is_home = (left_team_header == home_team)` using exact string match after whitespace normalisation via `_clean()`.
 
 ### 5.3 Player cells
 
@@ -116,23 +127,50 @@ The detail table header row contains left-team (td[1]) and right-team (td[3]) na
 
 ### 5.4 Game type
 
-`doubles` when either home or away player list has more than one entry; `singles` otherwise.
+`"doubles"` when either the home or away player list has more than one entry; `"singles"` otherwise.
+
+### 5.5 Score parsing
+
+Set scores, game results and running scores use regex `(\d+)\s*[–\-]\s*(\d+)` to handle both standard hyphens and en-dash characters.
 
 ---
 
 ## 6. Configuration (`URL_PARAMS`)
 
-`URL_PARAMS` is a nested dict keyed `Season → Genre → Category → list[params]` where each `params` dict has keys: `league_id`, `group_id`, `subgroup_id`, `sex`.
+`URL_PARAMS` is a nested dict keyed `Season → Genre → Category → list[ParamDict]` where each `ParamDict` has:
 
-Adding a new season requires:
-1. Adding a `Season` enum member
-2. Adding a `URL_PARAMS` entry with correct group counts per category
+```python
+{
+    "league_id":   str,        # base64 encoded e.g. "MQ=="
+    "group_id":    str,        # "0" for single-group, "1".."N" for multi-group
+    "subgroup_id": str | None, # "S" for 2021+, None for older seasons
+    "sex":         str,        # "M" | "F"
+}
+```
 
-Group counts must be verified empirically by checking `jornada=0` pages on the live site (see [Season Discovery Prompt](#season-discovery-prompt) in `prompts.md`).
+An empty list `[]` means the category does not exist for that season/genre combination.
 
 ---
 
-## 7. CLI Interface
+## 7. Programmatic Interface
+
+```python
+from rfetm_scraper import main
+
+main(
+    season   = "2024-2025",
+    genre    = None,       # None = both male and female
+    category = None,       # None = all categories
+    group    = None,       # None = all groups
+    jornada  = None,       # None = all rounds
+    output   = "../resources/match-results-details/v3-claude",
+    delay    = 1.0,
+)
+```
+
+---
+
+## 8. CLI Interface
 
 ```
 python rfetm_scraper.py [options]
@@ -142,13 +180,13 @@ python rfetm_scraper.py [options]
 --category  super-divisio | divisio-honor | primera-nacional | segona-nacional
 --group     group_id integer
 --jornada   scrape only this round number
---output    output directory                  default: "output"
---delay     seconds between requests          default: 1.0
+--output    output directory   default: ../resources/match-results-details/v3-claude
+--delay     seconds between requests   default: 1.0
 ```
 
 ---
 
-## 8. Error Handling
+## 9. Error Handling
 
 - HTTP errors: retry up to 3 times with exponential back-off (1s, 2s, 4s)
 - Empty jornada list on overview page: log warning, skip group
@@ -157,9 +195,10 @@ python rfetm_scraper.py [options]
 
 ---
 
-## 9. Known Constraints
+## 10. Known Constraints
 
 - The site serves HTML only; no public API exists
 - `requests.Session` with `User-Agent` header required to avoid 403s
-- `subgrupo` parameter must be omitted (not set to empty) for older seasons or the server returns no data
-- `find_all("table")` flat walk is required because match tables are nested inside a layout table — sibling-TR strategies do not work
+- `subgrupo` must be omitted (not empty) for older seasons
+- Flat `find_all("table")` walk required — match tables are nested inside a layout table; sibling-TR strategies do not work
+- `current_jornada` gating required — without it, layout/nav tables that happen to contain a date are misidentified as match tables

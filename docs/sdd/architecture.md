@@ -12,7 +12,7 @@ rfetm_scraper.py
 │   ├── Category       (SUPER_DIVISION, DIVISION_HONOR, PRIMERA_NACIONAL, SEGUNDA_NACIONAL)
 │   ├── Season         (T_2018_2019 → T_2024_2025)
 │   ├── _p()           param dict factory
-│   └── URL_PARAMS     Season → Genre → Category → list[params]
+│   └── URL_PARAMS     Season → Genre → Category → list[ParamDict]
 │
 ├── HTTP Layer
 │   ├── SESSION        requests.Session with User-Agent header
@@ -25,7 +25,7 @@ rfetm_scraper.py
 │   ├── _clean(text)               whitespace normalisation
 │   ├── get_jornada_numbers(soup)  extract round numbers from overview page
 │   ├── parse_player_cell(td)      → list[{lic, name}]
-│   └── same_team(a, b)            fuzzy team name equality (unused in parse path, kept for reference)
+│   └── same_team(a, b)            fuzzy team name equality (reference only)
 │
 ├── Page Parser
 │   ├── _parse_match_block(jornada_label, match_table, detail_table) → list[dict]
@@ -37,8 +37,11 @@ rfetm_scraper.py
 ├── Output
 │   └── write_csv(rows, path)
 │
-└── Entry Point
-    └── main(season, genre, category, group, jornada, output, delay)
+├── Programmatic Entry Point
+│   └── main(season, genre, category, group, jornada, output, delay)
+│
+└── CLI Entry Point  (__main__ block)
+    └── argparse → main(...)
 ```
 
 ---
@@ -46,69 +49,92 @@ rfetm_scraper.py
 ## 2. Data Flow
 
 ```
-main()
+__main__ (CLI) or import call
   │
-  ├─ for each (season, genre, category, params)
-  │
-  └─ scrape_group()
+  └─ main(season, genre, category, group, jornada, output, delay)
        │
-       ├─ fetch(overview_url jornada=0)
-       ├─ get_jornada_numbers(soup)       ← extracts ?jornada=N links
+       ├─ resolve Season / Genre / Category enums from string args
        │
-       └─ for each jornada N:
-            ├─ fetch(jornada_url)
-            ├─ parse_page(soup, N)
-            │    │
-            │    └─ walk all_tables[]
-            │         ├─ detect Jornada label → set current_jornada
-            │         └─ detect match table
-            │              ├─ find nested detail table (or all_tables[i+1])
-            │              └─ _parse_match_block()
-            │                   ├─ extract match header (date, teams, scores)
-            │                   ├─ extract venue + referee from detail rows
-            │                   ├─ determine left_is_home
-            │                   └─ for each game row → dict row
+       └─ for each (season, genre, category, params):
             │
-            └─ write_csv(rows, path)
+            └─ scrape_group(season, params, only_jornada)
+                 │
+                 ├─ fetch(overview_url jornada=0)
+                 ├─ get_jornada_numbers(soup)
+                 │
+                 └─ for each jornada N:
+                      ├─ fetch(jornada_url)
+                      ├─ parse_page(soup, N)
+                      │    │
+                      │    └─ walk all_tables[]
+                      │         ├─ detect Jornada label → set current_jornada
+                      │         └─ detect match table (after jornada gate)
+                      │              ├─ find nested detail table (or all_tables[i+1])
+                      │              └─ _parse_match_block()
+                      │                   ├─ extract date, teams, scores from match table
+                      │                   ├─ extract venue + referee from detail rows
+                      │                   ├─ determine left_is_home (exact string match)
+                      │                   └─ for each game row → dict
+                      │
+                      └─ write_csv(rows, {output}/{season}/rfetm-{season}-{genre}-{category}-group-{id}_matches.csv)
 ```
 
 ---
 
-## 3. Key Design Decisions
+## 3. Output Path Construction
 
-### 3.1 Flat `find_all("table")` walk
+```python
+csv_path = os.path.join(
+    output,        # e.g. ../resources/match-results-details/v3-claude
+    s.value,       # e.g. 2024-2025
+    f"rfetm-{s.value}-{g.value}-{c.value}-group-{params['group_id']}_matches.csv"
+)
+# → ../resources/match-results-details/v3-claude/2024-2025/rfetm-2024-2025-male-super-divisio-group-0_matches.csv
+```
 
-The site wraps all content in a layout `<table>`. Using `find_all("tr", recursive=False)` or sibling-TR strategies fails because match tables are not top-level. The working strategy is:
+Depth is always `output_root / season / filename` — flat within each season folder.
+
+---
+
+## 4. Key Design Decisions
+
+### 4.1 Flat `find_all("table")` walk
+
+The site wraps all content in a layout `<table>`. Using `find_all("tr", recursive=False)` or sibling-TR strategies fails because match tables are not top-level. The working strategy:
 
 1. Collect `soup.find_all("table")` — all tables regardless of nesting depth
 2. Walk by integer index `i`
 3. Use the jornada label table as a sentinel; only process match tables after one has been seen
-4. Look for the detail table as either a nested `table.find("table")` or `all_tables[i+1]`
+4. Look for the detail table as either `table.find("table")` (nested) or `all_tables[i+1]`
 
-### 3.2 `current_jornada` gating
+### 4.2 `current_jornada` gating
 
 Without the jornada sentinel, navigation/layout tables early in the page that happen to contain a date and links would be misidentified as match tables. The gate ensures we only parse content inside a jornada section.
 
-### 3.3 `left_is_home` via exact equality
+### 4.3 `left_is_home` via exact equality
 
-The detail table header contains verbatim team names. Exact match (after `_clean()`) is more reliable than fuzzy `same_team()` which can produce false positives when team names share substrings.
+The detail table header contains verbatim team names. Exact match after `_clean()` is correct and more reliable than fuzzy matching, which risks false positives when team names share substrings.
 
-### 3.4 `subgroup_id = None` for old seasons
+### 4.4 `subgroup_id = None` for old seasons
 
 `build_url()` omits the `&subgrupo=` parameter entirely when `subgroup_id is None`. Setting it to an empty string causes the server to return no results.
 
+### 4.5 Separated programmatic and CLI entry points
+
+`main()` is a pure Python function with typed parameters and defaults. All argparse logic lives exclusively in the `if __name__ == "__main__"` block, which calls `main()` with explicit keyword arguments. This avoids `sys.argv` inspection inside `main()`, making it safe to call from notebooks, test suites, and other scripts.
+
 ---
 
-## 4. `URL_PARAMS` Configuration Schema
+## 5. `URL_PARAMS` Configuration Schema
 
 ```python
 URL_PARAMS: dict[Season, dict[Genre, dict[Category, list[ParamDict]]]]
 
 ParamDict = {
-    "league_id":    str,   # base64 encoded e.g. "MQ=="
-    "group_id":     str,   # "0" for single-group categories, "1".."N" for multi-group
-    "subgroup_id":  str | None,  # "S" for 2021+, None for older seasons
-    "sex":          str,   # "M" | "F"
+    "league_id":    str,        # base64 encoded e.g. "MQ=="
+    "group_id":     str,        # "0" for single-group, "1".."N" for multi-group
+    "subgroup_id":  str | None, # "S" for seasons >= 2021, None for older
+    "sex":          str,        # "M" | "F"
 }
 ```
 
@@ -116,29 +142,26 @@ Empty list `[]` means the category does not exist for that season/genre combinat
 
 ---
 
-## 5. Season Discovery (future automation)
+## 6. Season Discovery (future automation)
 
-To auto-populate `URL_PARAMS` for a new season the following steps are needed:
+To auto-populate `URL_PARAMS` for a new season:
 
-1. **Fetch** `https://rfetm.es/public/resultados` and extract season links matching pattern `/{YYYY-YYYY}/`
-2. **For each new season**, for each (genre, category, `jornada=0`):
-   - Try `grupo=0` first (single group)
-   - If returns no matches, try `grupo=1`, `grupo=2`, ... until empty
-   - Record the max valid `grupo` value
-3. **Determine subgroup_id**: if season year ≥ 2021 use `"S"`, else `None`
-4. **Emit** new `Season` enum member + `URL_PARAMS` entry
+1. Fetch `https://rfetm.es/public/resultados` and extract season strings matching `YYYY-YYYY`
+2. For each new season × (genre, category): probe `grupo=0,1,2,...` on `jornada=0` pages until two consecutive grupos return no `equipo=` links
+3. Determine `subgroup_id`: `"S"` if season year ≥ 2021, else `None`
+4. Emit new `Season` enum member + `URL_PARAMS` entry
 
-This process is codified in `prompts.md` as the **Season Discovery Prompt**.
+This process is codified as ready-to-use prompts in `prompts.md`.
 
 ---
 
-## 6. Extension Points
+## 7. Extension Points
 
 | Extension | Where to change |
 |---|---|
-| New season | Add `Season` enum + `URL_PARAMS` entry (see prompts.md) |
+| New season | Add `Season` enum member + `URL_PARAMS` entry (see `prompts.md`) |
 | New category | Add `Category` enum + entries in all relevant seasons |
+| Different output root | Change `output` default in `main()` and `--output` default in `__main__` |
 | Additional output format (JSON, DB) | Add writer alongside `write_csv()` |
-| Async/concurrent fetching | Replace `fetch()` + `scrape_group()` with `aiohttp` |
+| Async / concurrent fetching | Replace `fetch()` + `scrape_group()` with `aiohttp` |
 | Resume interrupted scrape | Check for existing CSV before calling `scrape_group()` |
-| Proxy / rate limit handling | Extend `SESSION` setup and retry logic in `fetch()` |

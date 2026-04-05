@@ -488,7 +488,7 @@ def main(
     category: str = None,
     group: str = None,
     jornada: int = None,
-    output: str = "../resources/match-results-details/v3-claude-flat",
+    output: str = "../resources/match-results-details",
     delay: float = 1.0,
 ):
     """
@@ -574,4 +574,4 @@ if __name__ == "__main__":
     #main(season="2023-2024", genre="male")
     #main(season="2020-2021", genre="male")
     #main(season="2019-2020", genre="male")
-    main(season="2021-2022")
+    main(season="2024-2025")

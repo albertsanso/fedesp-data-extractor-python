@@ -13,6 +13,7 @@ class Category(Enum):
     SEGUNDA_NACIONAL = "segona-nacional"
 
 class Season(Enum):
+    T_2025_2026 = "2025-2026"
     T_2024_2025 = "2024-2025"
     T_2023_2024 = "2023-2024"
     T_2022_2023 = "2022-2023"

@@ -48,6 +48,7 @@ class Category(Enum):
 
 
 class Season(Enum):
+    T_2025_2026 = "2025-2026"
     T_2024_2025 = "2024-2025"
     T_2023_2024 = "2023-2024"
     T_2022_2023 = "2022-2023"
@@ -63,6 +64,20 @@ def _p(sex, lid, gid, sub):
 M, F = "M", "F"
 
 URL_PARAMS = {
+    Season.T_2025_2026: {
+        Genre.MALE: {
+            Category.SUPER_DIVISION:   [_p(M,"MQ==",0,"S")],
+            Category.DIVISION_HONOR:   [_p(M,"Mg==",g,"S") for g in range(1,4)],
+            Category.PRIMERA_NACIONAL: [_p(M,"Mw==",g,"S") for g in range(1,7)],
+            Category.SEGUNDA_NACIONAL: [_p(M,"NA==",g,"S") for g in range(1,13)],
+        },
+        Genre.FEMALE: {
+            Category.SUPER_DIVISION:   [_p(F,"MQ==",0,"S")],
+            Category.DIVISION_HONOR:   [_p(F,"Mg==",g,"S") for g in range(1,4)],
+            Category.PRIMERA_NACIONAL: [_p(F,"Mw==",g,"S") for g in range(1,7)],
+            Category.SEGUNDA_NACIONAL: [],
+        },
+    },
     Season.T_2024_2025: {
         Genre.MALE: {
             Category.SUPER_DIVISION:   [_p(M,"MQ==",0,"S")],
@@ -574,4 +589,14 @@ if __name__ == "__main__":
     #main(season="2023-2024", genre="male")
     #main(season="2020-2021", genre="male")
     #main(season="2019-2020", genre="male")
-    main(season="2024-2025")
+    #main(season="2024-2025")
+
+    #main(season="2025-2026", genre=Genre.FEMALE.value, category=Category.SUPER_DIVISION.value)
+    #main(season="2025-2026", genre=Genre.FEMALE.value, category=Category.DIVISION_HONOR.value)
+    #main(season="2025-2026", genre=Genre.FEMALE.value, category=Category.PRIMERA_NACIONAL.value)
+    #main(season="2025-2026", genre=Genre.FEMALE.value, category=Category.SEGUNDA_NACIONAL.value)
+
+    #main(season="2025-2026", genre=Genre.MALE.value, category=Category.SUPER_DIVISION.value)
+    #main(season="2025-2026", genre=Genre.MALE.value, category=Category.DIVISION_HONOR.value)
+    #main(season="2025-2026", genre=Genre.MALE.value, category=Category.PRIMERA_NACIONAL.value)
+    #main(season="2025-2026", genre=Genre.MALE.value, category=Category.SEGUNDA_NACIONAL.value)
